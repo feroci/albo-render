@@ -1,33 +1,48 @@
-FROM python:3.11-slim
+FROM debian:bookworm-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Installa dipendenze di sistema
+# Installazione delle dipendenze necessarie
 RUN apt-get update && apt-get install -y \
-    wget unzip curl gnupg ca-certificates fonts-liberation \
-    libappindicator3-1 libasound2 libatk-bridge2.0-0 libatk1.0-0 \
-    libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 \
-    libgcc1 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 \
-    libnss3 libpango-1.0-0 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 \
-    libxdamage1 libxext6 libxfixes3 libxrandr2 libxrender1 libxss1 \
-    libxtst6 xdg-utils && rm -rf /var/lib/apt/lists/*
+    wget \
+    curl \
+    unzip \
+    gnupg \
+    ca-certificates \
+    fonts-liberation \
+    libappindicator3-1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libgdk-pixbuf2.0-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    xdg-utils \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
 
-# Installa una versione fissa di Chrome (114)
-RUN wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb && \
+# Impostazione delle variabili d'ambiente
+ENV CHROME_VERSION=137.0.7151.55
+ENV CHROMEDRIVER_VERSION=137.0.7151.55
+
+# Installazione di Google Chrome
+RUN wget -O /tmp/google-chrome.deb https://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}-1_amd64.deb && \
     apt-get update && \
-    apt-get install -y ./google-chrome-stable_114.0.5735.90-1_amd64.deb && \
-    rm google-chrome-stable_114.0.5735.90-1_amd64.deb
+    apt-get install -y /tmp/google-chrome.deb && \
+    rm /tmp/google-chrome.deb
 
-# Installa lo specifico ChromeDriver 114
-RUN wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip && \
+# Installazione di ChromeDriver
+RUN wget -O /tmp/chromedriver.zip https://storage.googleapis.com/chrome-for-testing-public/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip && \
     unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
     chmod +x /usr/local/bin/chromedriver && \
     rm /tmp/chromedriver.zip
 
-WORKDIR /app
-COPY . /app
+# Impostazione del PATH
+ENV PATH="/usr/local/bin:$PATH"
 
-# Installa dipendenze Python
-RUN pip install --no-cache-dir -r requirements.txt
-
-CMD ["python", "main.py"]
+# Verifica delle versioni installate
+RUN google-chrome-stable --version && chromedriver --version
