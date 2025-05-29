@@ -6,14 +6,16 @@ RUN apt-get update && apt-get install -y \
     libgdk-pixbuf2.0-0 libnspr4 libnss3 libx11-xcb1 libxcomposite1 libxdamage1 \
     libxrandr2 xdg-utils
 
-# Installa Google Chrome
-RUN curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google.gpg && \
-    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && apt-get install -y google-chrome-stable
+# Installa Chrome 114 manualmente
+RUN wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb && \
+    apt-get install -y ./google-chrome-stable_114.0.5735.90-1_amd64.deb && \
+    rm google-chrome-stable_114.0.5735.90-1_amd64.deb
 
-# Copia lo script di installazione
-COPY install_chromedriver.sh /tmp/
-RUN chmod +x /tmp/install_chromedriver.sh && /tmp/install_chromedriver.sh
+# Installa il ChromeDriver 114 corrispondente
+RUN wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip && \
+    unzip /tmp/chromedriver.zip -d /usr/local/bin && \
+    chmod +x /usr/local/bin/chromedriver && \
+    rm /tmp/chromedriver.zip
 
 ENV PATH="/usr/local/bin:$PATH"
 
