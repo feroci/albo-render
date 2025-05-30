@@ -9,11 +9,12 @@ RUN apt-get update && apt-get install -y \
     libxdamage1 libxrandr2 libnss3 libxss1 libx11-xcb1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Installa GeckoDriver v0.34.0
-RUN wget -O /tmp/geckodriver.tar.gz https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz && \
+# Installa GeckoDriver 0.36.0 (compatibile con Firefox 128+)
+RUN wget -O /tmp/geckodriver.tar.gz https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz && \
     tar -xzf /tmp/geckodriver.tar.gz -C /usr/local/bin && \
     chmod +x /usr/local/bin/geckodriver && \
     rm /tmp/geckodriver.tar.gz
+
 
 
 WORKDIR /app
