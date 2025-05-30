@@ -1,48 +1,29 @@
-FROM debian:bookworm-slim
+# Base image con Python
+FROM python:3.11-slim
 
-# Installazione delle dipendenze necessarie
+# Evita domande durante apt install
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Installa dipendenze e Firefox + GeckoDriver
 RUN apt-get update && apt-get install -y \
-    wget \
-    curl \
-    unzip \
-    gnupg \
-    ca-certificates \
-    fonts-liberation \
-    libappindicator3-1 \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libgdk-pixbuf2.0-0 \
-    libnspr4 \
-    libnss3 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    xdg-utils \
-    --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+    wget curl gnupg unzip \
+    firefox-esr \
+    libgtk-3-0 libdbus-glib-1-2 libxt6 libxrender1 libxcomposite1 libasound2 libxdamage1 libxrandr2 libnss3 libxss1 libx11-xcb1 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Impostazione delle variabili d'ambiente
-ENV CHROME_VERSION=137.0.7151.55
-ENV CHROMEDRIVER_VERSION=137.0.7151.55
+# Installa GeckoDriver (versione compatibile)
+RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep '"tag_name":' | cut -d'"' -f4) && \
+    wget -O /tmp/geckodriver.tar.gz "https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz" && \
+    tar -xzf /tmp/geckodriver.tar.gz -C /usr/local/bin && \
+    chmod +x /usr/local/bin/geckodriver && \
+    rm /tmp/geckodriver.tar.gz
 
-# Installazione di Google Chrome
-RUN wget -O /tmp/google-chrome.deb https://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}-1_amd64.deb && \
-    apt-get update && \
-    apt-get install -y /tmp/google-chrome.deb && \
-    rm /tmp/google-chrome.deb
+# Copia i file del progetto
+WORKDIR /app
+COPY . /app
 
-# Installazione di ChromeDriver
-RUN wget -O /tmp/chromedriver.zip https://storage.googleapis.com/chrome-for-testing-public/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip && \
-    unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
-    chmod +x /usr/local/bin/chromedriver && \
-    rm /tmp/chromedriver.zip
+# Installa le dipendenze Python
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Impostazione del PATH
-ENV PATH="/usr/local/bin:$PATH"
-
-# Verifica delle versioni installate
-RUN google-chrome-stable --version && chromedriver --version
+# Comando di avvio
+CMD ["python", "main.py"]
